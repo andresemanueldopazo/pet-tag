@@ -8,6 +8,24 @@ generator client {
   previewFeatures = ["referentialActions"] // You won't need this in Prisma 3.X or higher.
 }
 
+model Tag {
+  id       Int      @id @default(autoincrement())
+  code     String   @unique
+  password String
+  pet      Pet?
+}
+
+model Pet {
+  id        Int     @id @default(autoincrement())
+  name      String
+  tag       Tag     @relation(fields: [tagCode], references: [code], onDelete: Cascade)
+  tagCode   String  @unique
+  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId   String
+
+  @@unique([name, ownerId])
+}
+
 model Account {
   id                 String  @id @default(cuid())
   userId             String
@@ -43,6 +61,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  pets          Pet[]
 }
 
 model VerificationToken {
