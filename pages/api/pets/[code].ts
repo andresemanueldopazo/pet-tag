@@ -108,6 +108,43 @@ export default async function handler(
       data: { name: name },
     })
     res.status(200).json({name: petEdited.name})
+  } else if (req.method === "DELETE") {
+    const session = await unstable_getServerSession(req, res, authOptions)
+    if (!session) {
+      return res.status(401).send({ message: "Unauthorized" })
+    }
+
+    const tagCode = req.query.code as string
+
+    const userLoggedInOrNull = await prisma.user.findUnique({
+      where: {
+        email: session.user!.email!,
+      },
+    })
+    const userLoggedIn = userLoggedInOrNull!
+
+    const pet = await prisma.pet.findUnique({
+      where: {
+        tagCode: tagCode
+      },
+    })
+    if (!pet) {
+      return res.status(401).send({ message: "Pet not found" })
+    }
+
+    const owner = await prisma.user.findUnique({
+      where: {
+        id: pet.ownerId
+      },
+    })
+    if (owner?.id !== userLoggedIn.id) {
+      return res.status(401).send({ message: "Unauthorized" })
+    }
+
+    const petDeleted = await prisma.pet.delete({
+      where: { id: pet.id },
+    })
+    res.status(200).json({name: petDeleted.name})
   } else {
     throw new Error(
       `The HTTP ${req.method} method is not supported at this route.`
