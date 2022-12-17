@@ -3,6 +3,7 @@ import prisma from "../../lib/prisma"
 import { useSession, signIn } from "next-auth/react"
 import { useRouter } from "next/router"
 import { useEffect } from "react"
+import Link from "next/link"
 
 type PetInfo = {
   name: string,
@@ -68,7 +69,12 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
   return (
     <>
       {petInfo && (
-        <> { petInfo.name } </>
+        <div className="flex flex-col">
+          <> { petInfo.name } </>
+          {session.status === "authenticated" && (
+            <Link href={`/${router.query.code}/edit`}> Edit perfil</Link>
+          )}
+        </div>
       )}
     </>
   )
