@@ -1,5 +1,8 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next"
 import prisma from "../../lib/prisma"
+import { useSession, signIn } from "next-auth/react"
+import { useRouter } from "next/router"
+import { useEffect } from "react"
 
 type PetInfo = {
   name: string,
@@ -48,12 +51,24 @@ export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }>
 }
 
 const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  const session = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (session.status !== "loading" && !petInfo) {
+      const url = `/${router.query.code}/add`
+      if (session.status === "authenticated") {
+        router.push(url)
+      } else {
+        signIn(undefined, { callbackUrl: url })
+      }
+    }
+  }, [session])
+
   return (
     <>
-      {petInfo ? (
+      {petInfo && (
         <> { petInfo.name } </>
-      ) : (
-        <> The tag was not assigned </>
       )}
     </>
   )
