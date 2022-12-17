@@ -1,7 +1,9 @@
 import '../assets/main.css'
 import type { AppProps } from 'next/app'
-import { useEffect } from 'react'
+import { FC, useEffect } from 'react'
 import { SessionProvider } from "next-auth/react"
+
+const Noop: FC = ({ children }: any) => <>{children}</>
 
 export default function MyApp({
   Component,
@@ -11,9 +13,13 @@ export default function MyApp({
     document.body.classList?.remove('loading')
   }, [])
 
+  const Layout = (Component as any).Layout || Noop
+
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
     </SessionProvider>
   )
 }

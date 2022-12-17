@@ -5,6 +5,7 @@ import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import * as AlertDialog from "@radix-ui/react-alert-dialog"
+import { Layout } from "../../components/layout"
 
 type PetInfo = {
   name: string,
@@ -130,5 +131,7 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
     </>
   )
 }
+
+Pet.Layout = Layout
 
 export default Pet

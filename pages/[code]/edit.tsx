@@ -1,7 +1,8 @@
-import { FC, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/router"
+import { Layout } from "../../components/layout"
 
-const AddPet: FC = () => {
+const AddPet = () => {
   const [name, setName] = useState("")
   const router = useRouter()
 
@@ -37,5 +38,7 @@ const AddPet: FC = () => {
     </form>
   )
 }
+
+AddPet.Layout = Layout
 
 export default AddPet
