@@ -1,4 +1,5 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next"
+import { Prisma } from "@prisma/client"
 import prisma from "../../lib/prisma"
 import { useSession, signIn } from "next-auth/react"
 import { useRouter } from "next/router"
@@ -9,6 +10,7 @@ import { Layout } from "../../components/layout"
 
 type PetInfo = {
   name: string,
+  ownerEmail: string,
 }
 
 export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }> = async ({ params }) => {
@@ -42,13 +44,22 @@ export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }>
     }
   }
 
-  const petInfo = {
-    name: pet.name,
-  }
+  const userEmail = Prisma.validator<Prisma.UserSelect>()({
+    email: true,
+  })
+  const ownerOrNull = await prisma.user.findUnique({
+    select: userEmail,
+    where: {
+      id: pet.ownerId,
+    },
+  })
 
   return {
     props: {
-      petInfo,
+      petInfo: {
+        name: pet.name,
+        ownerEmail: ownerOrNull!.email!,
+      },
     },
   }
 }
@@ -87,7 +98,7 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
       {petInfo && (
         <div className="flex flex-col">
           <> { petInfo.name } </>
-          {session.status === "authenticated" && (
+          {session.data?.user?.email === petInfo.ownerEmail && (
             <div className="space-x-4">
               <Link href={`/${router.query.code}/edit`}> Edit </Link>
               <AlertDialog.Root
