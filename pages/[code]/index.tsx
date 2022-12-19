@@ -1,5 +1,4 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next"
-import { Prisma } from "@prisma/client"
 import prisma from "../../lib/prisma"
 import { useSession, signIn } from "next-auth/react"
 import { useRouter } from "next/router"
@@ -20,20 +19,9 @@ export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }>
     }
   }
 
-  const tag = await prisma.tag.findUnique({
-    where: {
-      code: params.code as string,
-    },
-  })
-  if (!tag) {
-    return {
-      notFound: true,
-    }
-  }
-
   const pet = await prisma.pet.findUnique({
     where: {
-      tagCode: tag.code,
+      code: params.code as string,
     },
   })
   if (!pet) {
@@ -44,11 +32,10 @@ export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }>
     }
   }
 
-  const userEmail = Prisma.validator<Prisma.UserSelect>()({
-    email: true,
-  })
   const ownerOrNull = await prisma.user.findUnique({
-    select: userEmail,
+    select: {
+      email: true
+    },
     where: {
       id: pet.ownerId,
     },

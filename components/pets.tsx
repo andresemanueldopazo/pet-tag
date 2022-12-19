@@ -3,7 +3,7 @@ import Link from "next/link"
 
 type Pet = {
   name: string,
-  tagCode: string,
+  code: string,
 }
 
 export const Pets: FC<{pets: Pet[]}> = ({ pets }) => (
@@ -11,7 +11,7 @@ export const Pets: FC<{pets: Pet[]}> = ({ pets }) => (
     {pets.map(pet => 
       <li key={pet.name}>
         {pet.name}
-        <Link href={`/${pet.tagCode}`}> View perfil</Link>
+        <Link href={`/${pet.code}`}> View perfil</Link>
       </li>
     )}
   </ul>

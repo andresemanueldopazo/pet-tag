@@ -14,7 +14,7 @@ export default async function handler(
     }
 
     const { name, password } = req.body
-    const tagCode = req.query.code as string
+    const code = req.query.code as string
 
     const userOrNull = await prisma.user.findUnique({
       where: {
@@ -24,25 +24,27 @@ export default async function handler(
     const user = userOrNull!
 
     const tag = await prisma.tag.findUnique({
+      select: {
+        id: true,
+      },
       where: {
-        code: tagCode,
+        password: password,
       },
     })
     if (!tag) {
-      return res.status(404).send({ message: "Tag not found" })
+      return res.status(401).send({ message: "Password incorrect" })
     }
 
     const pet = await prisma.pet.findUnique({
+      select: {
+        id: true,
+      },
       where: {
-        tagCode: tagCode,
+        code: code,
       },
     })
     if (pet) {
       return res.status(401).send({ message: "Tag has already been used" })
-    }
-
-    if (tag.password !== password) {
-      return res.status(401).send({ message: "Password incorrect" })
     }
 
     const userPet = await prisma.pet.findUnique({
@@ -60,6 +62,7 @@ export default async function handler(
     const petCreated = await prisma.pet.create({
       data: {
         name: name,
+        code: code,
         owner: {
           connect: { id: user.id },
         },
@@ -76,7 +79,7 @@ export default async function handler(
     }
 
     const { name } = req.body
-    const tagCode = req.query.code as string
+    const code = req.query.code as string
 
     const userLoggedInOrNull = await prisma.user.findUnique({
       where: {
@@ -87,11 +90,26 @@ export default async function handler(
 
     const pet = await prisma.pet.findUnique({
       where: {
-        tagCode: tagCode
+        code: code
       },
     })
     if (!pet) {
       return res.status(401).send({ message: "Pet not found" })
+    }
+
+    const nameUsed = await prisma.pet.findUnique({
+      select: {
+        id: true,
+      },
+      where: {
+        name_ownerId: {
+          name: name,
+          ownerId: userLoggedIn.id,
+        },
+      },
+    }) 
+    if (nameUsed) {
+      return res.status(422).send({ message: "Name has already been used" })
     }
 
     const owner = await prisma.user.findUnique({
@@ -114,7 +132,7 @@ export default async function handler(
       return res.status(401).send({ message: "Unauthorized" })
     }
 
-    const tagCode = req.query.code as string
+    const code = req.query.code as string
 
     const userLoggedInOrNull = await prisma.user.findUnique({
       where: {
@@ -125,7 +143,7 @@ export default async function handler(
 
     const pet = await prisma.pet.findUnique({
       where: {
-        tagCode: tagCode
+        code: code
       },
     })
     if (!pet) {

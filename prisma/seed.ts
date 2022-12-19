@@ -10,18 +10,18 @@ const userData: Prisma.UserCreateInput[] = [
       create: [
         {
           name: 'Luli',
+          code: "0",
           tag: {
             create: {
-              code: "0",
               password: "1234" 
             },
           }
         },
         {
           name: 'Rubia',
+          code: "1",
           tag: {
             create: {
-              code: "1",
               password: "2345" 
             },
           }
@@ -36,9 +36,9 @@ const userData: Prisma.UserCreateInput[] = [
       create: [
         {
           name: 'Bianca',
+          code: "2",
           tag: {
             create: {
-              code: "2",
               password: "3456" 
             },
           }
@@ -49,11 +49,9 @@ const userData: Prisma.UserCreateInput[] = [
 ]
 const tagData: Prisma.TagCreateInput[] = [
   {
-    code: "3",
     password: "4567"
   },
   {
-    code: "4",
     password: "5678"
   }
 ]

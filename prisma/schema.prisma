@@ -9,19 +9,19 @@ generator client {
 }
 
 model Tag {
-  id       Int      @id @default(autoincrement())
-  code     String   @unique
-  password String
+  id       Int     @id @default(autoincrement())
+  password String  @unique
   pet      Pet?
 }
 
 model Pet {
-  id        Int     @id @default(autoincrement())
-  name      String
-  tag       Tag     @relation(fields: [tagCode], references: [code], onDelete: Cascade)
-  tagCode   String  @unique
-  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId   String
+  id           Int     @id @default(autoincrement())
+  code         String  @unique
+  name         String
+  tag          Tag     @relation(fields: [tagPassword], references: [password], onDelete: Cascade)
+  tagPassword  String  @unique
+  owner        User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId      String
 
   @@unique([name, ownerId])
 }
