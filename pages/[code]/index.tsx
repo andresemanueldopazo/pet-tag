@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import * as AlertDialog from "@radix-ui/react-alert-dialog"
 import { Layout } from "../../components/layout"
+import * as Dialog from "@radix-ui/react-dialog"
 
 type PetInfo = {
   name: string,
@@ -80,11 +81,36 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
     }
   }
 
+  const [rememberEmailIsOpen, setRememberEmailIsOpen] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const submitData = async (e: React.SyntheticEvent) => {
+    e.preventDefault()
+    try {
+      const body = { password }
+      const response = await fetch(`/api/pets/${router.query.code}/owner`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (response.ok) {
+        setEmail((await response.json()).email)
+        setPassword("")
+      } else {
+        setEmail("Incorrect password")
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return (
     <>
       {petInfo && (
-        <div className="flex flex-col">
-          <> { petInfo.name } </>
+        <div className="flex flex-col space-y-4">
+          <div>
+            { petInfo.name }
+          </div>
           {session.data?.user?.email === petInfo.ownerEmail ? (
             <div className="space-x-4">
               <Link href={`/${router.query.code}/edit`}> Edit </Link>
@@ -124,7 +150,7 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
               </AlertDialog.Root>
             </div>
           ) : (
-            <>
+            <div className="flex flex-col justify-center space-y-4">
               {!session.data && (
                 <button
                   type="button"
@@ -133,7 +159,61 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
                   Log in to edit this profile
                 </button>
               )}
-            </>
+              <Dialog.Root
+                open={rememberEmailIsOpen}
+                onOpenChange={setRememberEmailIsOpen}
+              >
+                <Dialog.Trigger asChild>
+                  <button
+                    onClick={() => {
+                      setOpenDeleteAlert(false)
+                      setEmail("")
+                    }}
+                  >
+                    Remember associated email
+                  </button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay
+                    className="
+                      fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center
+                    "
+                  />
+                  <Dialog.Content className="
+                    fixed z-50 top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2
+                    w-max max-w-full flex flex-col items-center border rounded p-4 bg-primary
+                  ">
+                    <Dialog.Close asChild>
+                      <button
+                        className="right-self"
+                        type="button"
+                      >
+                        X
+                      </button>
+                    </Dialog.Close>
+                    {email ? (
+                      email
+                    ) : (
+                      <form
+                        className="flex flex-col justify-center"
+                        onSubmit={submitData}
+                      >
+                        <input
+                          autoFocus
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Password"
+                          type="password"
+                          value={password}
+                        />
+                        <button disabled={!password}>
+                          Get email
+                        </button>
+                      </form>
+                    )}
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </div>
           )}
         </div>
       )}
