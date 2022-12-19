@@ -85,7 +85,7 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
       {petInfo && (
         <div className="flex flex-col">
           <> { petInfo.name } </>
-          {session.data?.user?.email === petInfo.ownerEmail && (
+          {session.data?.user?.email === petInfo.ownerEmail ? (
             <div className="space-x-4">
               <Link href={`/${router.query.code}/edit`}> Edit </Link>
               <AlertDialog.Root
@@ -123,6 +123,17 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
                 </AlertDialog.Portal>
               </AlertDialog.Root>
             </div>
+          ) : (
+            <>
+              {!session.data && (
+                <button
+                  type="button"
+                  onClick={() => signIn()}
+                >
+                  Log in to edit this profile
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
