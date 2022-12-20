@@ -8,27 +8,47 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog"
 import { Layout } from "../../components/layout"
 import * as Dialog from "@radix-ui/react-dialog"
 
-type PetInfo = {
+type Tag = {
+  pet: Pet | null,
+}
+
+type Pet = {
   name: string,
   ownerEmail: string,
 }
 
-export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }> = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps<{ tag: Tag | null }> = async ({ params }) => {
   if (!params?.code) {
     return {
       notFound: true,
     }
   }
 
+  const tagCode = params.code as string
+
+  const tag = await prisma.tag.findUnique({
+    where: {
+      code: tagCode,
+    },
+  })
+  if (!tag) {
+    return {
+      props: {
+        tag: null,
+      },
+    }
+  }
   const pet = await prisma.pet.findUnique({
     where: {
-      code: params.code as string,
+      tagCode: tagCode,
     },
   })
   if (!pet) {
     return {
       props: {
-        petInfo: null,
+        tag: {
+          pet: null,
+        },
       },
     }
   }
@@ -44,21 +64,23 @@ export const getServerSideProps: GetServerSideProps<{ petInfo: PetInfo | null }>
 
   return {
     props: {
-      petInfo: {
-        name: pet.name,
-        ownerEmail: ownerOrNull!.email!,
+      tag: {
+        pet: {
+          name: pet.name,
+          ownerEmail: ownerOrNull!.email!,
+        },
       },
     },
   }
 }
 
-const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const session = useSession()
   const router = useRouter()
 
   useEffect(() => {
-    if (session.status !== "loading" && !petInfo) {
-      const url = `/${router.query.code}/add`
+    if (session.status !== "loading" && !tag?.pet) {
+      const url = `/${router.query.code}/add?exist=${!!tag}`
       if (session.status === "authenticated") {
         router.push(url)
       } else {
@@ -72,7 +94,7 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
   const deletePet = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     try {
-      await fetch(`/api/pets/${router.query.code}`, {
+      await fetch(`/api/tags/${router.query.code}/pet`, {
         method: "DELETE",
       })
       await router.push("/")
@@ -88,7 +110,7 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
     e.preventDefault()
     try {
       const body = { password }
-      const response = await fetch(`/api/pets/${router.query.code}/owner`, {
+      const response = await fetch(`/api/tags/${router.query.code}/pet/owner`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -106,12 +128,12 @@ const Pet = ({ petInfo }: InferGetServerSidePropsType<typeof getServerSideProps>
 
   return (
     <>
-      {petInfo && (
+      {tag?.pet && (
         <div className="flex flex-col space-y-4">
           <div>
-            { petInfo.name }
+            { tag.pet.name }
           </div>
-          {session.data?.user?.email === petInfo.ownerEmail ? (
+          {session.data?.user?.email === tag.pet.ownerEmail ? (
             <div className="space-x-4">
               <Link href={`/${router.query.code}/edit`}> Edit </Link>
               <AlertDialog.Root

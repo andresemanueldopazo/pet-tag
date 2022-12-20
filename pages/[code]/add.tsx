@@ -11,7 +11,7 @@ const AddPet = () => {
     e.preventDefault()
     try {
       const body = { name, password }
-      await fetch(`/api/pets/${router.query.code}`, {
+      await fetch(`/api/tags/${router.query.code}/pet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -21,6 +21,8 @@ const AddPet = () => {
       console.error(error)
     }
   }
+
+  const exist = router.query.exist === "true"
 
   return (
     <form
@@ -40,7 +42,7 @@ const AddPet = () => {
         type="password"
         value={password}
       />
-      <button disabled={!name || !password}>
+      <button disabled={!name || (!password && !exist)}>
         Add pet
       </button>
     </form>

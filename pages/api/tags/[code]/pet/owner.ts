@@ -1,4 +1,4 @@
-import prisma from "../../../../lib/prisma"
+import prisma from "../../../../../lib/prisma"
 import { NextApiRequest, NextApiResponse } from "next"
 
 export default async function handler(
@@ -9,9 +9,27 @@ export default async function handler(
     const code = req.query.code as string
     const { password } = req.body
 
+    const tag = await prisma.tag.findMany({
+      select: {
+        id: true,
+      },
+      where: {
+        AND: [
+          {
+            code: code
+          },
+          {
+            password: password
+          },
+        ],
+      },
+    })
+    if (!tag.length) {
+      return res.status(401).send({ message: "Password incorrect" })
+    }
+
     const pet = await prisma.pet.findUnique({
       select: {
-        tagPassword: true,
         owner: {
           select: {
             email: true,
@@ -19,14 +37,14 @@ export default async function handler(
         },
       },
       where: {
-        code: code,
+        tagCode: code,
       },
     })
-    if (pet?.tagPassword !== password) {
-      return res.status(401).send({ message: "Unauthorized" })
+    if (!pet) {
+      return res.status(404).send({ message: "Pet not found" })
     }
 
-    res.status(200).json({email: pet?.owner.email})
+    res.status(200).json({email: pet.owner.email})
   } else {
     throw new Error(
       `The HTTP ${req.method} method is not supported at this route.`

@@ -1,7 +1,7 @@
-import prisma from "../../../../lib/prisma"
+import prisma from "../../../../../lib/prisma"
 import { NextApiRequest, NextApiResponse } from "next"
 import { unstable_getServerSession } from "next-auth"
-import { authOptions } from "../../auth/[...nextauth]"
+import { authOptions } from "../../../auth/[...nextauth]"
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,19 +23,19 @@ export default async function handler(
     })
     const user = userOrNull!
 
-    const tag = await prisma.tag.findUnique({
+    const pet = await prisma.pet.findUnique({
       select: {
         id: true,
       },
       where: {
-        password: password,
+        tagCode: code,
       },
     })
-    if (!tag) {
-      return res.status(401).send({ message: "Password incorrect" })
+    if (pet) {
+      return res.status(401).send({ message: "Tag has already been used" })
     }
 
-    const pet = await prisma.pet.findUnique({
+    let tag = await prisma.tag.findUnique({
       select: {
         id: true,
       },
@@ -43,8 +43,39 @@ export default async function handler(
         code: code,
       },
     })
-    if (pet) {
-      return res.status(401).send({ message: "Tag has already been used" })
+    if (!tag) {
+      const tagWithPassword = await prisma.tag.findUnique({
+        select: {
+          code: true,
+        },
+        where: {
+          password: password,
+        },
+      })
+      if (!tagWithPassword) {
+        return res.status(401).send({ message: "Password incorrect" })
+      }
+
+      const pet = await prisma.pet.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          tagCode: tagWithPassword.code,
+        },
+      })
+      if (pet) {
+        return res.status(401).send({ message: "Tag has already been used" })
+      }
+
+      tag = await prisma.tag.update({
+        where: {
+          password: password,
+        },
+        data: {
+          code: code,
+        }
+      })
     }
 
     const userPet = await prisma.pet.findUnique({
@@ -62,7 +93,6 @@ export default async function handler(
     const petCreated = await prisma.pet.create({
       data: {
         name: name,
-        code: code,
         owner: {
           connect: { id: user.id },
         },
@@ -81,6 +111,19 @@ export default async function handler(
     const { name } = req.body
     const code = req.query.code as string
 
+    const pet = await prisma.pet.findUnique({
+      select: {
+        id: true,
+        ownerId: true,
+      },
+      where: {
+        tagCode: code
+      },
+    })
+    if (!pet) {
+      return res.status(401).send({ message: "Pet not found" })
+    }
+
     const userLoggedInOrNull = await prisma.user.findUnique({
       where: {
         email: session.user!.email!,
@@ -88,16 +131,7 @@ export default async function handler(
     })
     const userLoggedIn = userLoggedInOrNull!
 
-    const pet = await prisma.pet.findUnique({
-      where: {
-        code: code
-      },
-    })
-    if (!pet) {
-      return res.status(401).send({ message: "Pet not found" })
-    }
-
-    const nameUsed = await prisma.pet.findUnique({
+    const nameWasUsed = await prisma.pet.findUnique({
       select: {
         id: true,
       },
@@ -108,7 +142,7 @@ export default async function handler(
         },
       },
     }) 
-    if (nameUsed) {
+    if (nameWasUsed) {
       return res.status(422).send({ message: "Name has already been used" })
     }
 
@@ -127,39 +161,69 @@ export default async function handler(
     })
     res.status(200).json({name: petEdited.name})
   } else if (req.method === "DELETE") {
-    const session = await unstable_getServerSession(req, res, authOptions)
-    if (!session) {
-      return res.status(401).send({ message: "Unauthorized" })
-    }
-
     const code = req.query.code as string
+    const { password } = req.body
 
-    const userLoggedInOrNull = await prisma.user.findUnique({
-      where: {
-        email: session.user!.email!,
-      },
-    })
-    const userLoggedIn = userLoggedInOrNull!
-
-    const pet = await prisma.pet.findUnique({
+    const tag = await prisma.tag.findUnique({
       where: {
         code: code
+      }
+    })
+    if (!tag) {
+      return res.status(404).send({ message: "Tag not found" })
+    }
+
+    const pet = await prisma.pet.findUnique({
+      select: {
+        id: true,
+        owner: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+      where: {
+        tagCode: code,
       },
     })
     if (!pet) {
-      return res.status(401).send({ message: "Pet not found" })
+      return res.status(404).send({ message: "Pet not found" })
     }
 
-    const owner = await prisma.user.findUnique({
-      where: {
-        id: pet.ownerId
-      },
-    })
-    if (owner?.id !== userLoggedIn.id) {
-      return res.status(401).send({ message: "Unauthorized" })
+    if (tag.password !== password) {
+      const session = await unstable_getServerSession(req, res, authOptions)
+      if (!session) {
+        return res.status(401).send({ message: "Unauthorized" })
+      }
+      
+      const userLoggedIn = await prisma.user.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          email: session.user!.email!,
+        },
+      })
+
+      const owner = await prisma.user.findUnique({
+        select: {
+          id: true,
+        },
+        where: {
+          id: pet.owner.id
+        },
+      })
+
+      if (owner!.id !== userLoggedIn!.id) {
+        return res.status(401).send({ message: "Unauthorized" })
+      }
     }
 
     const petDeleted = await prisma.pet.delete({
+      select: {
+        name: true,
+      },
       where: { id: pet.id },
     })
     res.status(200).json({name: petDeleted.name})

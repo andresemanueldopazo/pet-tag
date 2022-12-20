@@ -10,7 +10,7 @@ const AddPet = () => {
     e.preventDefault()
     try {
       const body = { name }
-      await fetch(`/api/pets/${router.query.code}`, {
+      await fetch(`/api/tags/${router.query.code}/pet`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
