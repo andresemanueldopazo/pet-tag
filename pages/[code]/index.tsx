@@ -7,6 +7,7 @@ import Link from "next/link"
 import * as AlertDialog from "@radix-ui/react-alert-dialog"
 import { Layout } from "../../components/layout"
 import * as Dialog from "@radix-ui/react-dialog"
+import DesassociatePet from "../../components/disassociate-pet"
 
 type Tag = {
   pet: Pet | null,
@@ -235,6 +236,7 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
                   </Dialog.Content>
                 </Dialog.Portal>
               </Dialog.Root>
+              <DesassociatePet/>
             </div>
           )}
         </div>
