@@ -8,6 +8,7 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog"
 import { Layout } from "../../components/layout"
 import DesassociatePet from "../../components/disassociate-pet"
 import RememberEmail from "../../components/remember-email"
+import { DeletePet } from "../../components/delete-pet"
 
 type Tag = {
   pet: Pet | null,
@@ -79,8 +80,6 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
   const session = useSession()
   const router = useRouter()
 
-  const [openDeleteAlert, setOpenDeleteAlert] = useState(false)
-
   useEffect(() => {
     if (session.status !== "loading" && !tag?.pet) {
       const url = `/${router.query.code}/add?exist=${!!tag}`
@@ -92,18 +91,6 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
     }
   }, [session])
 
-  const deletePet = async (e: React.SyntheticEvent) => {
-    e.preventDefault()
-    try {
-      await fetch(`/api/tags/${router.query.code}/pet`, {
-        method: "DELETE",
-      })
-      await router.push("/")
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
   return (
     <>
       {tag?.pet && (
@@ -114,40 +101,7 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
           {session.data?.user?.email === tag.pet.ownerEmail ? (
             <div className="space-x-4">
               <Link href={`/${router.query.code}/edit`}> Edit </Link>
-              <AlertDialog.Root
-                open={openDeleteAlert}
-                onOpenChange={setOpenDeleteAlert}
-              >
-                <AlertDialog.Trigger>
-                  Delete
-                </AlertDialog.Trigger>
-                <AlertDialog.Portal>
-                  <AlertDialog.Overlay
-                    className="
-                      fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center
-                    "
-                    onClick={() => setOpenDeleteAlert(false)}
-                  />
-                  <AlertDialog.Content className="
-                    fixed z-50 top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2
-                    w-max max-w-full flex flex-col items-center border rounded p-4 bg-primary
-                  ">
-                    <AlertDialog.Title>
-                      Are you sure?
-                    </AlertDialog.Title>
-                    <div className="flex space-x-4">
-                      <AlertDialog.Cancel>
-                        Cancel
-                      </AlertDialog.Cancel>
-                      <AlertDialog.Action asChild>
-                        <button onClick={(e) => deletePet(e)}>
-                          Yes, delete profile pet
-                        </button>
-                      </AlertDialog.Action>
-                    </div>
-                  </AlertDialog.Content>
-                </AlertDialog.Portal>
-              </AlertDialog.Root>
+              <DeletePet/>
             </div>
           ) : (
             <div className="flex flex-col justify-center space-y-4">
