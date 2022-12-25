@@ -107,6 +107,31 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
   const session = useSession()
   const router = useRouter()
 
+  const notify = () => {
+    if (!navigator.geolocation) {
+      console.log("there is no geolocation")
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        async (location) => {
+          try {
+            await fetch("/api/notify-parents", {
+              "method": "POST",
+              "headers": { "content-type": "application/json" },
+              "body": JSON.stringify({
+                code: router.query.code,
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }),
+            })
+          } catch (error) {
+            console.dir(error)
+          }
+        },
+        () => console.log("could not get the location"),
+      )
+    }
+  }
+
   useEffect(() => {
     if (session.status !== "loading" && !tag?.pet) {
       const url = `/${router.query.code}/add?exist=${!!tag}`
@@ -137,6 +162,11 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
               })}
             </ul>
           </div>
+          <button
+            onClick={notify}
+          >
+            Notify parents
+          </button>
           {session.data?.user?.email === tag.pet.ownerEmail ? (
             <div className="space-x-4">
               <Link href={`/${router.query.code}/edit`}> Edit </Link>
