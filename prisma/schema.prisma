@@ -14,13 +14,24 @@ model Tag {
   pet      Pet?
 }
 
+model Parent {
+  id          Int     @id @default(autoincrement())
+  name        String
+  phoneNumber String?
+  email       String?
+  visible     Boolean @default(false)
+  pet         Pet     @relation(fields: [petId], references: [id], onDelete: Cascade)
+  petId       Int
+}
+
 model Pet {
-  id           Int     @id @default(autoincrement())
-  name         String
-  tag          Tag     @relation(fields: [tagCode], references: [code], onDelete: Cascade)
-  tagCode      String  @unique
-  owner        User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId      String
+  id      Int    @id @default(autoincrement())
+  name    String
+  tag     Tag    @relation(fields: [tagCode], references: [code], onDelete: Cascade)
+  tagCode String @unique
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String
+  parents Parent[]
 
   @@unique([name, ownerId])
 }
