@@ -14,7 +14,7 @@ const userData: Prisma.UserCreateInput[] = [
             create: [
               {
                 name: "Andres",
-                phoneNumber: "5493541522837",
+                phoneNumber: "+5493541522837",
                 email: "andresemanueld@gmail.com",
                 visible: true,
               },

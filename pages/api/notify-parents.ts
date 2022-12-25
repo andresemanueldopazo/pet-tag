@@ -1,8 +1,18 @@
-import client from '@sendgrid/mail'
-import { NextApiRequest, NextApiResponse } from 'next'
+import emailClient from "@sendgrid/mail"
+import { NextApiRequest, NextApiResponse } from "next"
 import prisma from "../../lib/prisma"
+const smsClient = require("twilio")(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+)
 
-client.setApiKey(process.env.EMAIL_SERVER_PASSWORD!)
+emailClient.setApiKey(process.env.EMAIL_SERVER_PASSWORD!)
+
+type TextMsg = {
+  from: string,
+  to: string,
+  body: string,
+}
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { code, latitude, longitude } = req.body
@@ -12,6 +22,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       parents: {
         select: {
           email: true,
+          phoneNumber: true,
         },
       },
     },
@@ -23,7 +34,24 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(404).send({ message: "Pet not found" })
   }
 
-  const msgs = pet.parents.map((parent) => ({
+  const textMsgs = pet.parents.reduce<TextMsg[]>((previusValue, currentValue) => {
+    const phoneNumber = currentValue.phoneNumber
+    return (phoneNumber ? (
+      [...previusValue, {
+        from: process.env.TWILIO_PHONE_NUMBER!,
+        to: phoneNumber,
+        body: `${pet.name} is at https://maps.google.com/?q=${latitude},${longitude}`,
+    }]
+    ) : (
+      previusValue
+    ))
+  }, [])
+
+  const resultsTextMsgs = textMsgs.map((textMsg) => {
+    return smsClient.messages.create(textMsg)
+  })
+
+  const emailMsgs = pet.parents.map((parent) => ({
     to: parent.email!,
     from: process.env.EMAIL_FROM!,
     subject: "Lost child",
@@ -31,15 +59,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     text: `${pet.name} is at https://maps.google.com/?q=${latitude},${longitude}`,
   }))
 
-  const results = msgs.map((msg) => {
-    return client.send(msg)
+  const resultsEmails = emailMsgs.map((msg) => {
+    return emailClient.send(msg)
   })
 
   try {
-    await Promise.all(results)
-    res.json({ message: `Email has been sent` })
+    await Promise.all(resultsEmails)
+    await Promise.all(resultsTextMsgs)
+    res.json({ message: `Messages has been sent` })
   } catch(error) {
     console.dir(error)
-    res.status(500).json({ error: 'Error sending email' })
+    res.status(500).json({ error: "Error sending messages" })
   }
 }
