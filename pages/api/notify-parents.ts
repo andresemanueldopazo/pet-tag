@@ -14,6 +14,14 @@ type TextMsg = {
   body: string,
 }
 
+type EmailMsg = {
+  to: string,
+  from: string,
+  subject: string,
+  name: string,
+  text: string,
+}
+
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { code, latitude, longitude } = req.body
   const pet = await prisma.pet.findUnique({
@@ -51,13 +59,20 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return smsClient.messages.create(textMsg)
   })
 
-  const emailMsgs = pet.parents.map((parent) => ({
-    to: parent.email!,
-    from: process.env.EMAIL_FROM!,
-    subject: "Lost child",
-    name: "Pet Tag",
-    text: `${pet.name} is at https://maps.google.com/?q=${latitude},${longitude}`,
-  }))
+  const emailMsgs = pet.parents.reduce<EmailMsg[]>((previusValue, currentValue) => {
+    const email = currentValue.email
+    return (email ? (
+      [...previusValue, {
+        to: email!,
+        from: process.env.EMAIL_FROM!,
+        subject: "Lost child",
+        name: "Pet Tag",
+        text: `${pet.name} is at https://maps.google.com/?q=${latitude},${longitude}`,
+      }]
+    ) : (
+      previusValue
+    ))
+  }, [])
 
   const resultsEmails = emailMsgs.map((msg) => {
     return emailClient.send(msg)
