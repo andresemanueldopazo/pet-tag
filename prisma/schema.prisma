@@ -14,12 +14,27 @@ model Tag {
   pet      Pet?
 }
 
+model Phone {
+  id       Int     @id @default(autoincrement())
+  number   String
+  public   Boolean @default(true)
+  parent   Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId Int     @unique
+}
+
+model Email {
+  id       Int     @id @default(autoincrement())
+  address  String
+  public   Boolean @default(true)
+  parent   Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId Int     @unique
+}
+
 model Parent {
   id          Int     @id @default(autoincrement())
   name        String
-  phoneNumber String?
-  email       String?
-  visible     Boolean @default(false)
+  phone       Phone?
+  email       Email?
   pet         Pet     @relation(fields: [petId], references: [id], onDelete: Cascade)
   petId       Int
 }

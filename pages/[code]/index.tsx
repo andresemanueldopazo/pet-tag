@@ -19,9 +19,14 @@ type Pet = {
   name: string,
   parents: {
     name: string,
-    email: string | null,
-    phoneNumber: string | null,
-    visible: boolean,
+    phone: {
+      number: string | null,
+      public: boolean,
+    } | null,
+    email: {
+      address: string | null,
+      public: boolean,
+    } | null,
   }[],
   ownerEmail: string,
 }
@@ -50,7 +55,23 @@ export const getServerSideProps: GetServerSideProps<{ tag: Tag | null }> = async
   const pet = await prisma.pet.findUnique({
     select: {
       name: true,
-      parents: true,
+      parents: {
+        select: {
+          name: true,
+          email: {
+            select: {
+              address: true,
+              public: true,
+            }
+          },
+          phone: {
+            select: {
+              number: true,
+              public: true,
+            }
+          },
+        },
+      },
       ownerId: true,
     },
     where: {
@@ -67,13 +88,6 @@ export const getServerSideProps: GetServerSideProps<{ tag: Tag | null }> = async
     }
   }
 
-  const parents = pet.parents.map(parent => ({
-    name: parent.name,
-    email: parent.email,
-    phoneNumber: parent.phoneNumber,
-    visible: parent.visible,
-  }))
-
   const ownerOrNull = await prisma.user.findUnique({
     select: {
       email: true
@@ -85,17 +99,28 @@ export const getServerSideProps: GetServerSideProps<{ tag: Tag | null }> = async
   const ownerEmail = ownerOrNull!.email!
 
   const session = await unstable_getServerSession(context.req, context.res, authOptions)
-  
+  const isTheOwner = session?.user?.email === ownerEmail
+
+  const parents = pet.parents.map(parent => ({
+    name: parent.name,
+    email: parent.email ? {
+      address: isTheOwner || parent.email.public ?
+        (parent.email?.address ?? null) : null,
+      public: isTheOwner && parent.email.public
+    } : null,
+    phone: parent.phone ? {
+      number: isTheOwner || parent.phone.public ?
+        (parent.phone?.number ?? null) : null,
+      public: isTheOwner && parent.phone.public
+    } : null,
+  }))
+
   return {
     props: {
       tag: {
         pet: {
           name: pet.name,
-          parents: session?.user?.email === ownerEmail ? (
-            parents
-          ) : (
-            parents.filter(parent => parent.visible)
-          ),
+          parents,
           ownerEmail: ownerOrNull!.email!,
         },
       },
@@ -153,10 +178,30 @@ const Pet = ({ tag }: InferGetServerSidePropsType<typeof getServerSideProps>) =>
           <div>
             <ul>
               {tag.pet.parents.map((parent) => {
-                const { name, email, phoneNumber } = parent 
+                const { name, email, phone } = parent 
+
                 return (
-                  <li key={name}>
-                    {name} {email} {phoneNumber}
+                  <li
+                    className="flex flex-row space-x-4"
+                    key={name}
+                  >
+                    <span> {name} </span>
+                    {email && (
+                      <div>
+                        <span> {email.address} </span>
+                        {tag?.pet?.ownerEmail && tag?.pet?.ownerEmail === session.data?.user?.email && (
+                          <span className="text-sm"> {`is ${email.public ? "public": "private"}`} </span>
+                        )}
+                      </div>
+                    )}
+                    {phone && (
+                      <div>
+                        <span> {phone.number} </span>
+                        {tag?.pet?.ownerEmail && tag?.pet?.ownerEmail === session.data?.user?.email && (
+                          <span className="text-sm"> {`is ${phone.public ? "public": "private"}`} </span>
+                        )}
+                      </div>
+                    )}
                   </li>
                 )
               })}

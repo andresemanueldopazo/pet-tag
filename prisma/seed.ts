@@ -14,13 +14,27 @@ const userData: Prisma.UserCreateInput[] = [
             create: [
               {
                 name: "Andres",
-                phoneNumber: "+5493541522837",
-                email: "andresemanueld@gmail.com",
-                visible: true,
+                phone: {
+                  create: {
+                    number: "+5493541522837",
+                    public: false,
+                  },
+                },
+                email: {
+                  create: {
+                    address: "andresemanueld@gmail.com",
+                    public: true,
+                  },
+                },
               },
               {
                 name: "Carolina",
-                email: "sotelocarolina909@gmail.com",
+                email: {
+                  create: {
+                    address: "sotelocarolina909@gmail.com",
+                    public: true,
+                  },
+                },
               },
             ],
           },

@@ -29,8 +29,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       name: true,
       parents: {
         select: {
-          email: true,
-          phoneNumber: true,
+          email: {
+            select: {
+              address: true,
+            },
+          },
+          phone: {
+            select: {
+              number: true,              
+            },
+          },
         },
       },
     },
@@ -43,7 +51,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   const textMsgs = pet.parents.reduce<TextMsg[]>((previusValue, currentValue) => {
-    const phoneNumber = currentValue.phoneNumber
+    const phoneNumber = currentValue.phone?.number
     return (phoneNumber ? (
       [...previusValue, {
         from: process.env.TWILIO_PHONE_NUMBER!,
@@ -60,7 +68,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   })
 
   const emailMsgs = pet.parents.reduce<EmailMsg[]>((previusValue, currentValue) => {
-    const email = currentValue.email
+    const email = currentValue.email?.address
     return (email ? (
       [...previusValue, {
         to: email!,
