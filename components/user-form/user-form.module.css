@@ -1,0 +1,9 @@
+.icon {
+  @apply mr-3 text-accent-6 outline-none;
+  margin-left: -6px;
+  transition: transform 0.2s ease;
+}
+
+.icon.open {
+  transform: rotate(180deg);
+}

@@ -6,6 +6,17 @@ const userData: Prisma.UserCreateInput[] = [
   {
     name: 'Andres',
     email: 'andres@prisma.io',
+    password: "password",
+    address: {
+      create: {
+        street: "Entre mares",
+        apartament: "8j",
+        city: "Carlos guerra",
+        state: "Gordoba",
+        country: "Argenzuela",
+        zipCode: 5152,
+      },
+    },
     pets: {
       create: [
         {
