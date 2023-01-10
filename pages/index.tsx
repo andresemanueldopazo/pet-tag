@@ -12,6 +12,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 export type User = {
   name: string,
   email: string,
+  phone: string,
   address: Omit<Address, "id" | "userId"> | null
 }
 
@@ -29,6 +30,7 @@ export const getServerSideProps: GetServerSideProps<{ pets: Pet[], user: User | 
   const userOrNull = await prisma.user.findUnique({
     select: {
       id: true,
+      phone: true,
       address: true,
     },
     where: {
@@ -49,6 +51,7 @@ export const getServerSideProps: GetServerSideProps<{ pets: Pet[], user: User | 
       user: {
         name: session.user!.name!,
         email: session.user!.email!,
+        phone: user.phone,
         address: user.address,
       }
     },

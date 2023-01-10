@@ -1410,6 +1410,11 @@ jws@^3.2.2:
     jwa "^1.4.1"
     safe-buffer "^5.0.1"
 
+libphonenumber-js@^1.10.15:
+  version "1.10.16"
+  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.10.16.tgz#b5e8baf70b4ed49a6b3aaf1325277a2614447287"
+  integrity sha512-ga6F+8WSmMprzIKvRoeL/iAvkZWSdEpYCDISnXIiQTXw7sezfk+J9IHwzjK3b+6QvyZK8Gjjzjl3Hp+B5lpUXg==
+
 lilconfig@^2.0.5, lilconfig@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/lilconfig/-/lilconfig-2.0.6.tgz#32a384558bd58af3d4c6e077dd1ad1d397bc69d4"
@@ -1506,6 +1511,13 @@ ms@^2.1.1:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
+
+mui-tel-input@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/mui-tel-input/-/mui-tel-input-3.0.2.tgz#f35a12800754fe4fe44e494354fa4b58c07e9c79"
+  integrity sha512-WgVrD3Rf8uApTZ5YdMKyWeS2EUL+UPJGNvAaSZTZ+sLEOy59s/q98SHFx5St3JpbmMZMmQ1MWFrH5A5U8bEQ0Q==
+  dependencies:
+    libphonenumber-js "^1.10.15"
 
 nanoid@^3.3.4:
   version "3.3.4"
