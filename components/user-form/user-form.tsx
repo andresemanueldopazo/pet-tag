@@ -9,6 +9,7 @@ import { useSpring, a } from "@react-spring/web"
 import * as Collapsible from "@radix-ui/react-collapsible"
 import s from "./user-form.module.css"
 import cn from "clsx"
+import Phone from "./phone"
 
 const UserForm: FC<{ user: User}> = ({ user }) => {
   const [addressRef, { height: viewHeight }] = useMeasure()
@@ -81,6 +82,10 @@ const UserForm: FC<{ user: User}> = ({ user }) => {
               <div className="rounded-2xl flex flex-col bg-accent-1 px-4">
                 <label htmlFor="Zip code" className="text-sm text-left text-accent-6 font-medium"> Zip code </label>
                 <input id="Zip code" value={user.address?.zipCode} className="bg-inherit outline-none"/>
+              </div>
+              <div className="rounded-2xl flex flex-col bg-accent-1 px-4">
+                <label htmlFor="Phone" className="text-sm text-left text-accent-6 font-medium"> Phone </label>
+                <Phone number={user.phone} />
               </div>
             </div>
           </a.div>
