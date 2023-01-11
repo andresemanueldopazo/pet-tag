@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import { MuiTelInput } from 'mui-tel-input'
 
 type Phone = {
-  number: string,
+  number: string | null,
 }
 
 const Phone: FC<Phone> = ({ number }) => {

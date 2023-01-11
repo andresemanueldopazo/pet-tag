@@ -12,7 +12,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 export type User = {
   name: string,
   email: string,
-  phone: string,
+  phone: string | null,
   address: Omit<Address, "id" | "userId"> | null
 }
 
